@@ -1,4 +1,4 @@
-(ns janus.core
+(ns janus.verifier
   [:require [clj-http.client :as http]
    [json-path]]
   [:use midje.sweet
