@@ -9,4 +9,5 @@
   :dev-dependencies [[swank-clojure "1.4.0-SNAPSHOT"]
                      [clj-http-fake "0.2.3"]
                      [midje "1.3.1"]
-                     [lein-midje "1.0.4"]])
+                     [lein-midje "1.0.4"]]
+  :main janus)
