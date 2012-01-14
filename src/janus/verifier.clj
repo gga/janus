@@ -1,15 +1,11 @@
 (ns janus.verifier
   [:require [clj-http.client :as http]
+   [janus.json-response]
    [json-path]]
   [:use midje.sweet
-   clj-http.fake
-   [clojure.data.json :only [read-json]]])
+   clj-http.fake])
 
 (unfinished )
-
-(defn verify-response-body [body clause])
-
-(fact "should verify that the body matches")
 
 (defn verify-response [response field validation]
   (if (not= (get response field) (get validation field))
@@ -28,10 +24,10 @@
 
 (defn verify-service [service]
   (let [response (http/request {:method (:method service), :url (:url service)})
-        body (read-json (:body response))]
-    (filter #(not (nil? %)) (concat
-                             (map #(verify-response response % service) [:status])
-                             (map #(verify-response-body body %) (:clauses service))))))
+        body (:body response)]
+    {:envelope (filter #(not (nil? %)) 
+                       (map #(verify-response response % service) [:status]))
+     :contents (janus.json-response/verify-document body (:clauses service))}))
 
 (with-fake-routes
   {"http://example.com/" (fn [req] {:status 201,
@@ -39,17 +35,18 @@
                                     :body (str "\"body via " (name (:request-method req)) "\"")})}
   
   (fact "should verify status codes"
-    (verify-service ..service..) => (contains "Expected status: 200. Actual status: 201")
+    (:envelope (verify-service ..service..)) => (contains "Expected status: 200. Actual status: 201")
     (provided
+      (janus.json-response/verify-document anything []) => nil
       ..service.. =contains=> {:method :get}
       ..service.. =contains=> {:url "http://example.com/"}
       ..service.. =contains=> {:status 200}
       ..service.. =contains=> {:clauses []}))
 
   (fact "should issue the request as required by the contract"
-    (verify-service ..service..) => (contains "Body expected to match #\"post\"")
+    (:contents (verify-service ..service..)) => (contains "Body expected to match #\"post\"")
     (provided
-      (verify-response-body "body via post" anything) => "Body expected to match #\"post\""
+      (janus.json-response/verify-document anything anything) => ["Body expected to match #\"post\""]
       ..service.. =contains=> {:method :post}
       ..service.. =contains=> {:url "http://example.com/"}
       ..service.. =contains=> {:status 201}
