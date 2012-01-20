@@ -4,3 +4,6 @@ pom.xml
 /classes/
 .lein-failures
 .lein-deps-sum
+/tmp/aruba/bad-contract.jns
+/tmp/aruba/good-contract.jns
+/sinatra.log

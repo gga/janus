@@ -1,14 +1,19 @@
 require 'cucumber'
 require 'cucumber/rake/task'
 
+VERSION = "0.0.1"
+JAR = "janus-#{VERSION}-standalone.jar"
+
+CLJ_SRC = FileList['**/*.clj']
+
+file JAR => CLJ_SRC do
+  sh "lein uberjar"
+end
+
 task :test do
   sh "lein midje"
 end
 
-task :build do
-  sh "lein uberjar"
-end
-
-Cucumber::Rake::Task.new(:features => :build) do |t|
-  t.cucumber_opts = "features --format pretty"
+Cucumber::Rake::Task.new(:features => JAR) do |t|
+  t.cucumber_opts = "features --format pretty --tags ~@wip"
 end
