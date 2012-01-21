@@ -10,6 +10,7 @@ file JAR => CLJ_SRC do
   sh "lein uberjar"
 end
 
+desc "Run all tests"
 task :test do
   sh "lein midje"
 end
