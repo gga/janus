@@ -7,47 +7,112 @@
 
 (unfinished )
 
-(defn verify-response [response field validation]
-  (if (not= (get response field) (get validation field))
-    (str "Expected " (name field) ": " (get validation field) ". "
-         "Actual "  (name field) ": " (get response field))))
+(defn extract-clause [clause contract context]
+  (filter #(= clause (nth % 0))
+          (concat (:clauses contract) (:clauses context))))
 
-(fact ""
-  (verify-response ..resp.. :status ..validation..) => nil?
+(fact
+  (extract-clause :s ..contract.. ..context..) => [[:s 1] [:s 2]]
   (provided
-    ..resp.. =contains=> {:status 200}
-    ..validation.. =contains=> {:status 200})
-  (verify-response ..resp.. :status ..validation..) => "Expected status: 200. Actual status: 201"
-  (provided
-    ..resp.. =contains=> {:status 201}
-    ..validation.. =contains=> {:status 200}))
+    ..contract.. =contains=> {:clauses [[:s 1]]}
+    ..context.. =contains=> {:clauses [[:s 2]]}))
 
-(defn verify-service [service]
-  (let [response (http/request {:method (:method service), :url (:url service)})
-        body (:body response)]
-    {:envelope (filter #(not (nil? %)) 
-                       (map #(verify-response response % service) [:status]))
-     :contents (janus.json-response/verify-document body (:clauses service))}))
+(defmulti check-clause (fn [response clause] (nth clause 0)))
 
-(with-fake-routes
-  {"http://example.com/" (fn [req] {:status 201,
-                                    :headers {},
-                                    :body (str "\"body via " (name (:request-method req)) "\"")})}
+(defmethod check-clause :status [response clause]
+  (let [actual (:status response)
+        expected (nth clause 1)]
+    (if (not= expected actual)
+      (str "Expected status " expected ". Got status " actual))))
+
+(fact "a status clause should check against a response correctly"
+  (check-clause {:status 200} [:status 201]) => "Expected status 201. Got status 200")
+
+(defmethod check-clause :header [response clause]
+  (let [[_ header-name comparison expected] clause
+        actual (-> response :headers (get header-name))]
+    (cond
+     (= :equal-to comparison) (if (not= expected actual)
+                               (str "Expected header '" header-name "' to equal '" expected "'. Got '" actual "'.")))))
+
+(fact "a header clause should allow equality and matching checks"
+  (check-clause {:headers {"ct" "blah"}} [:header "ct" :equal-to "blah"]) => empty?
+  (check-clause {:headers {"ct" "foo"}} [:header "ct" :equal-to "bar"]) => "Expected header 'ct' to equal 'bar'. Got 'foo'.")
+
+(defn errors-in-envelope [response contract context]
+  (concat
+   (map (partial check-clause response)
+        (extract-clause :status contract context))
+   (map (partial check-clause response)
+        (extract-clause :header contract context))))
+
+(against-background [..response.. =contains=> {:status 200}
+                     ..response.. =contains=> {:headers {"ct" "app/json"}}
+                     ..response.. =contains=> {:body "example body"}]
+  (fact "reponse with different status fails"
+    (errors-in-envelope ..response.. ..contract.. ..context..) => ["Expected status 201. Got status 200"]
+    (provided
+      ..contract.. =contains=> {:clauses [[:status 201]]})
+    (errors-in-envelope ..response.. ..contract.. ..context..) => ["Expected header 'ct' to equal 'text/html'. Got 'app/json'."]
+    (provided
+      ..contract.. =contains=> {:clauses [[:header "ct" :equal-to "text/html"]]})))
+
+(defn errors-in-body [])
+
+(fact "")
+
+(defn property [prop-name contract context]
+  (:value (first (filter #(= prop-name (:name %))
+                         (concat (:properties contract) (:properties context))))))
+
+(against-background [..contract.. =contains=> {:properties []}
+                     ..context.. =contains=> {:properties []}]
+  (fact "property values are extracted from the contract"
+    (property "prop" ..contract.. ..context..) => "contract val"
+    (provided
+      ..contract.. =contains=> {:properties [{:name "prop" :value "contract val"}]})
+    
+    (property "prop" ..contract.. ..context..) => "first"
+    (provided
+      ..contract.. =contains=> {:properties [{:name "prop" :value "first"}
+                                             {:name "prop" :value "second"}]})
+
+    (property "prop" ..contract.. ..context..) => nil)
+
+  (fact "property values are extracted from the context"
+    (property "prop" ..contract.. ..context..) => "context val"
+    (provided
+      ..context.. =contains=> {:properties [{:name "prop" :value "context val"}]})))
+
+(defn verify-contract [contract context]
+  (let [response (http/request {:method (property "method" contract context),
+                                :url (property "url" contract context)})
+        envelope-errors (errors-in-envelope response ..contract.. ..context..)
+        body-errors (errors-in-body response ..contract.. ..context..)
+        errors (concat envelope-errors body-errors)]
+    (if (empty? errors)
+      [(:name contract) :succeeded]
+      [(:name contract) :failed errors])))
+
+(against-background
+  [(http/request {:method :get, :url "url"}) => "http response"
+   ..contract.. =contains=> {:name "sample contract"}
+   (property "method" ..contract.. ..context..) => :get
+   (property "url" ..contract.. ..context..) => "url"
+   (errors-in-envelope "http response" ..contract.. ..context..) => []
+   (errors-in-body "http response" ..contract.. ..context..) => []]
   
-  (fact "should verify status codes"
-    (:envelope (verify-service ..service..)) => (contains "Expected status: 200. Actual status: 201")
-    (provided
-      (janus.json-response/verify-document anything []) => nil
-      ..service.. =contains=> {:method :get}
-      ..service.. =contains=> {:url "http://example.com/"}
-      ..service.. =contains=> {:status 200}
-      ..service.. =contains=> {:clauses []}))
+  (fact "a valid service succeeds"  
+    (verify-contract ..contract.. ..context..) => ["sample contract" :succeeded])
 
-  (fact "should issue the request as required by the contract"
-    (:contents (verify-service ..service..)) => (contains "Body expected to match #\"post\"")
+  (fact "a service with an invalid envelope provides descriptive messages"
+    (verify-contract ..contract.. ..context..) => ["sample contract" :failed
+                                                   ["Expected status to be: 201. Got: 200"]]
     (provided
-      (janus.json-response/verify-document anything anything) => ["Body expected to match #\"post\""]
-      ..service.. =contains=> {:method :post}
-      ..service.. =contains=> {:url "http://example.com/"}
-      ..service.. =contains=> {:status 201}
-      ..service.. =contains=> {:clauses [{:path "$", :matching #"post"}]})))
+      (errors-in-envelope "http response" ..contract.. ..context..) => ["Expected status to be: 201. Got: 200"]))
+
+  (fact "a service with an invalid body provides descriptive messages"
+    (verify-contract ..contract.. ..context..) => ["sample contract" :failed
+                                                   ["Expected body to match."]]
+    (provided
+      (errors-in-body "http response" ..contract.. ..context..) => ["Expected body to match."])))
