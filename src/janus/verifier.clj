@@ -57,9 +57,26 @@
     (provided
       ..contract.. =contains=> {:clauses [[:header "ct" :equal-to "text/html"]]})))
 
-(defn errors-in-body [])
+(defn errors-in-body [response contract context]
+  (let [doc-type (-> response :headers (get "Content-Type"))
+        body (:body response)
+        clauses (concat (:clauses contract) (:clauses context))]
+    (cond
+     (or (= "application/json" doc-type)
+         (re-seq #"\+json" doc-type)) (janus.json-response/verify-document body clauses))))
 
-(fact "")
+(fact "the body is checked depending on the content-type of document received"
+  (against-background)
+  
+  (errors-in-body ..response.. ..contract.. ..context..) => empty?
+  (provided
+    ..response.. =contains=> {:headers {"Content-Type" "application/json"}}
+    (janus.json-response/verify-document anything anything) => [])
+
+  (errors-in-body ..response.. ..contract.. ..context..) => empty?
+  (provided
+    ..response.. =contains=> {:headers {"Content-Type" "application/vnd.example.account+json"}}
+    (janus.json-response/verify-document anything anything) => []))
 
 (defn property [prop-name contract context]
   (:value (first (filter #(= prop-name (:name %))
