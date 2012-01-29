@@ -51,13 +51,29 @@
             (header "Name" "Value") => [:header {:name "Name" :value "Value"}])
 
 (defn contract [name & definition]
-  {:name name
-   :properties (map #(nth % 1) (filter #(= :property (first %)) definition))
-   :clauses (map #(nth % 1) (filter #(= :clause (first %)) definition))
-   :headers (map #(nth % 1) (filter #(= :header (first %)) definition))})
+  [:contract {:name name
+              :properties (map #(nth % 1) (filter #(= :property (first %)) definition))
+              :clauses (map #(nth % 1) (filter #(= :clause (first %)) definition))
+              :headers (map #(nth % 1) (filter #(= :header (first %)) definition))}])
+
+(defn contract-with [check-key expected-value]
+  (midje/chatty-checker [actual-contract]
+                  (= expected-value (check-key (nth actual-contract 1)))))
 
 (midje/fact "defining a contract"
-            (:name (contract "sample")) => "sample"
-            (:properties (contract "sample" (method :post))) => (midje/contains {:name "method" :value :post})
-            (:clauses (contract "sample" (should-have :path "$" :of-type :string))) => '([:path "$" :of-type :string])
-            (:headers (contract "sample" (header "CT" "json"))) => (midje/contains  {:name "CT" :value "json"}))
+            (contract "sample") => (contract-with :name "sample")
+            (contract "sample" (method :post)) => (contract-with :properties [{:name "method" :value :post}])
+            (contract "sample" (should-have :path "$" :of-type :string)) => (contract-with :clauses [[:path "$" :of-type :string]])
+            (contract "sample" (header "CT" "json")) => (contract-with :headers [{:name "CT" :value "json"}]))
+
+(defn service [name & definition]
+  {:name name
+   :properties (map #(nth % 1) (filter #(= :property (first %)) definition))
+   :headers (map #(nth % 1) (filter #(= :header (first %)) definition))
+   :contracts (map #(nth % 1) (filter #(= :contract (first %)) definition))})
+
+(midje/fact "defining a service"
+            (:name (service "sample")) => "sample"
+            (:properties (service "sample" (method :post))) => (midje/contains {:name "method" :value :post})
+            (:headers (service "sample" (header "ct" "json"))) => (midje/contains {:name "ct" :value "json"})
+            (:contracts (service "sample" (contract "contract 1"))) => (midje/contains {:name "contract 1" :properties [] :headers [] :clauses []}))
