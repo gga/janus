@@ -5,7 +5,8 @@ Feature: Verify the contract for a JSON service
 
   @wip
   Scenario: Verify a single contract for my correct service
-    Given a web service at "/service" that returns JSON:
+    Given I have a mock HTTP service
+    And   a web service at "/service" that returns JSON:
     """
     {
       "id": 10,
@@ -16,16 +17,14 @@ Feature: Verify the contract for a JSON service
     """
     (service
       (contract "simple JSON service"
-        (definition
-          (method :get)
-          (header "Content-Type" "application/json")
+        (method :get)
+        (header "Content-Type" "application/json")
 
-          (clauses
-            (should-have :path "$.id" :of-type :number)
-            (should-have :path "$..features[*]" :matching #"[a-z]")))))
+        (should-have :path "$.id" :of-type :number)
+        (should-have :path "$..features[*]" :matching #"[a-z]")))
     """
     When I run janus with the contract "simple JSON service"
-    Then the output should contain:
+    Then the output from janus should contain:
     """
     1 service passed
     0 services failed
