@@ -1,9 +1,8 @@
-(ns janus.verifier
+(ns janus.verify
   [:require [clj-http.client :as http]
    [janus.json-response]
    [json-path]]
-  [:use midje.sweet
-   clj-http.fake])
+  [:use midje.sweet])
 
 (unfinished )
 
@@ -133,3 +132,18 @@
                                                    ["Expected body to match."]]
     (provided
       (errors-in-body "http response" ..contract.. ..context..) => ["Expected body to match."])))
+
+(defn verify-service [service context]
+  (filter #(not= nil %)
+          (map #(verify-contract % context) (:contracts service))))
+
+(facts
+  (verify-service ..service.. ..context..) => [["sample" :succeeded]]
+  (provided
+    ..service.. =contains=> {:contracts [{:name "sample"}]}
+    (verify-contract {:name "sample"} ..context..) => ["sample" :succeeded])
+
+  (verify-service ..service.. ..context..) => [["sample" :failed ["message"]]]
+  (provided
+    ..service.. =contains=> {:contracts [{:name "sample"}]}
+    (verify-contract {:name "sample"} ..context..) => ["sample" :failed ["message"]]))

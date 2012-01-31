@@ -26,8 +26,6 @@ Feature: Verify the contract for a JSON service
     When I run janus with the contract "simple JSON service"
     Then the output from janus should contain:
     """
-    1 service passed
-    0 services failed
-    2 clauses passed
-    0 clauses failed
+    1 service (0 failed)
+    1 contract (0 failed)
     """

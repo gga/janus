@@ -1,5 +1,3 @@
-;; Require and use list is very strict here as only symbols that are
-;; safe to use in a contract definition should be available.
 (ns janus.dsl
   [:require [midje.sweet :as midje]])
 
@@ -77,3 +75,15 @@
             (:properties (service "sample" (method :post))) => (midje/contains {:name "method" :value :post})
             (:headers (service "sample" (header "ct" "json"))) => (midje/contains {:name "ct" :value "json"})
             (:contracts (service "sample" (contract "contract 1"))) => (midje/contains {:name "contract 1" :properties [] :headers [] :clauses []}))
+
+(defn construct-domain [dsl-form]
+  (let [dsl-ns (create-ns 'dsl-defn)
+        compiled (binding [*ns* dsl-ns]
+                   (eval '(clojure.core/refer 'clojure.core))
+                   (eval '(refer 'janus.dsl))
+                   (eval dsl-form))]
+    (remove-ns 'dsl-defn)
+    compiled))
+
+(midje/fact "loading a DSL program"
+            (construct-domain '(service "sample")) => {:name "sample", :properties (), :headers (), :contracts ()})

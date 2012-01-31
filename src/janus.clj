@@ -1,23 +1,27 @@
 (ns janus
   [:gen-class]
-  [:require [clojure.tools.cli]]
-  [:use midje.sweet])
+  [:require [clojure.tools.cli]
+   [janus.dsl]
+   [janus.verify]])
 
-(defn verify [contract]
+(defn verify [service]
   (try
-    (let [contract-text (slurp contract)
-          contract-defn (read-string contract-text)]
-      (println contract-defn))
+    (let [service-text (slurp service)
+          service-defn (read-string service-text)
+          service (janus.dsl/construct-domain service-defn)]
+      (println service)
+      [0 "Successful"])
     (catch java.io.FileNotFoundException e
-      [1 (str "Could not find '" contract "'")])
+      [1 (str "Could not find '" service "'")])
     (catch RuntimeException e
-      [1 (str "Invalid contract in '" contract "'")])))
+      [1 (str "Invalid service in '" service "'.")])))
 
 (defn -main [& args]
   (let [config (clojure.tools.cli/cli args
-                                      ["-v" "--verify" "Contracts to verify"])
-        contract (:verify (nth config 0))
+                                      ["-v" "--verify" "Services to verify"])
+        service (:verify (nth config 0))
         [status message] (cond
-                          contract (verify contract))]
+                          service (verify service)
+                          :else [0 ""])]
     (do (println message)
-        status)))
+        (System/exit status))))
