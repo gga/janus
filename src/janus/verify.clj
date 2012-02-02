@@ -1,8 +1,8 @@
 (ns janus.verify
-  [:require [clj-http.client :as http]
-   [janus.json-response]
+  [:require [janus.json-response]
    [json-path]]
-  [:use midje.sweet])
+  [:use [midje.sweet]
+   [clj-http.client :only [request]]])
 
 (unfinished )
 
@@ -101,7 +101,7 @@
       ..context.. =contains=> {:properties [{:name "prop" :value "context val"}]})))
 
 (defn verify-contract [contract context]
-  (let [response (http/request {:method (property "method" contract context),
+  (let [response (request {:method (property "method" contract context),
                                 :url (property "url" contract context)})
         envelope-errors (errors-in-envelope response ..contract.. ..context..)
         body-errors (errors-in-body response ..contract.. ..context..)
@@ -111,7 +111,7 @@
       [(:name contract) :failed errors])))
 
 (against-background
-  [(http/request {:method :get, :url "url"}) => "http response"
+  [(request {:method :get, :url "url"}) => "http response"
    ..contract.. =contains=> {:name "sample contract"}
    (property "method" ..contract.. ..context..) => :get
    (property "url" ..contract.. ..context..) => "url"
