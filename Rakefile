@@ -10,6 +10,9 @@ file JAR => CLJ_SRC do
   sh "lein uberjar"
 end
 
+desc "Build janus into something runnable"
+task :build => JAR
+
 desc "Run all tests"
 task :test do
   sh "lein midje"

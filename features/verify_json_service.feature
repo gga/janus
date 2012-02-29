@@ -3,7 +3,6 @@ Feature: Verify the contract for a JSON service
   As a consuming developer
   I want to verify that the service meets a contract
 
-  @wip
   Scenario: Verify a single contract for my correct service
     Given I have a mock HTTP service
     And   a web service at "/service" that returns JSON:
@@ -15,9 +14,10 @@ Feature: Verify the contract for a JSON service
     """
     And a contract "simple JSON service":
     """
-    (service
-      (contract "simple JSON service"
+    (service "simple JSON service"
+      (contract "GET document"
         (method :get)
+        (url "http://localhost:4568/service")
         (header "Content-Type" "application/json")
 
         (should-have :path "$.id" :of-type :number)
@@ -27,5 +27,4 @@ Feature: Verify the contract for a JSON service
     Then the output from janus should contain:
     """
     1 service (0 failed)
-    1 contract (0 failed)
     """

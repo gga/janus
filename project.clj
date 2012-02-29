@@ -4,7 +4,7 @@
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/data.json "0.1.1"]
                  [json-path "0.2.0"]
-                 [clj-http "0.2.4"]
+                 [clj-http "0.3.2"]
                  [org.clojure/core.logic "0.6.6"]
                  [org.clojure/tools.cli "0.2.1"]]
   :dev-dependencies [[swank-clojure "1.4.0-SNAPSHOT"]

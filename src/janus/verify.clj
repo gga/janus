@@ -1,7 +1,8 @@
 (ns janus.verify
   [:require [janus.json-response]
    [json-path]
-   [clj-http.client :as http]])
+   [clj-http.client :as http]]
+  [:use midje.sweet])
 
 (defn extract-clause [clause contract context]
   (filter #(= clause (nth % 0))
@@ -30,7 +31,7 @@
         (extract-clause :header contract context))))
 
 (defn errors-in-body [response contract context]
-  (let [doc-type (-> response :headers (get "Content-Type"))
+  (let [doc-type (-> response :headers (get "content-type"))
         body (:body response)
         clauses (concat (:clauses contract) (:clauses context))]
     (cond
@@ -54,3 +55,12 @@
 (defn verify-service [service context]
   (filter #(not= nil %)
           (map #(verify-contract % context) (:contracts service))))
+
+;; (fact
+;;   (verify-service {:name "simple JSON service"
+;;                    :contracts [{:name "GET document"
+;;                                 :properties [{:name "method" :value :get}
+;;                                              {:name "url" :value "http://localhost:4568/service"}]
+;;                                 :headers [{:name "Content-Type" :value "application/json"}]
+;;                                 :clauses [[:path "$..id" :of-type :number]
+;;                                           [:path "$..features[*]" :matching #"[a-z]"]]}]} {}) => empty?)

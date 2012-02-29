@@ -34,12 +34,12 @@
   
   (errors-in-body ..response.. ..contract.. ..context..) => empty?
   (provided
-    ..response.. =contains=> {:headers {"Content-Type" "application/json"}}
+    ..response.. =contains=> {:headers {"content-type" "application/json"}}
     (janus.json-response/verify-document anything anything) => [])
 
   (errors-in-body ..response.. ..contract.. ..context..) => empty?
   (provided
-    ..response.. =contains=> {:headers {"Content-Type" "application/vnd.example.account+json"}}
+    ..response.. =contains=> {:headers {"content-type" "application/vnd.example.account+json"}}
     (janus.json-response/verify-document anything anything) => []))
 
 (against-background [..contract.. =contains=> {:properties []}
