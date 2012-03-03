@@ -23,5 +23,12 @@ Then /^the output from janus should contain "([^"]*)"$/ do |expected|
 end
 
 Then /^the output from janus should contain:$/ do |expected|
-  step %{the output from "#{last_janus_run}" should contain "#{expected}"}
+  expected.lines do |line|
+    steps %Q{
+      Then the output should contain:
+      """
+      #{line.strip}
+      """
+    }
+  end
 end

@@ -21,3 +21,15 @@ end
 Cucumber::Rake::Task.new(:features => JAR) do |t|
   t.cucumber_opts = "features --format pretty --tags ~@wip"
 end
+
+desc "Verifies janus"
+task :verify => [:test, :features]
+
+desc "Packages Janus for release"
+task :package => [:build, :verify] do
+  rel_name = "janus-#{VERSION}"
+  mkdir_p rel_name
+  cp JAR, "#{rel_name}/janus.jar"
+  sh "tar -cvf #{rel_name}.tar #{rel_name}"
+  sh "gzip #{rel_name}.tar"
+end

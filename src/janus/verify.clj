@@ -1,6 +1,7 @@
 (ns janus.verify
   [:require [janus.json-response]
    [json-path]
+   [clojure.data.json :as json]
    [clj-http.client :as http]]
   [:use midje.sweet])
 
@@ -35,16 +36,26 @@
         body (:body response)
         clauses (concat (:clauses contract) (:clauses context))]
     (cond
-     (or (= "application/json" doc-type)
-         (re-seq #"\+json" doc-type)) (janus.json-response/verify-document body clauses))))
+     (or (re-seq #"^application/json" doc-type)
+         (re-seq #"\+json" doc-type)) (janus.json-response/verify-document body clauses)
+     :else [(str "Unable to verify documents of type '" doc-type "'")])))
 
 (defn property [prop-name contract context]
   (:value (first (filter #(= prop-name (:name %))
                          (concat (:properties contract) (:properties context))))))
 
+(defn body-from [contract context]
+  (let [body-def (if (contains? contract :body)
+                   (:body contract)
+                   (:body context))]
+    (cond
+     (= (:type body-def) :string) (str (:data body-def))
+     (= (:type body-def) :json) (json/json-str (:data body-def)))))
+
 (defn verify-contract [contract context]
   (let [response (http/request {:method (property "method" contract context),
-                                :url (property "url" contract context)})
+                                :url (property "url" contract context)
+                                :body (body-from contract context)})
         envelope-errors (errors-in-envelope response contract context)
         body-errors (errors-in-body response contract context)
         errors (concat envelope-errors body-errors)]
@@ -53,8 +64,11 @@
       [(:name contract) :failed errors])))
 
 (defn verify-service [service context]
-  (filter #(not= nil %)
-          (map #(verify-contract % context) (:contracts service))))
+  (let [errors (filter #(= :failed (nth % 1))
+                       (map #(verify-contract % context) (:contracts service)))]
+    (if (empty? errors)
+      [(:name service) :succeeded]
+      [(:name service) :failed errors])))
 
 ;; (fact
 ;;   (verify-service {:name "simple JSON service"

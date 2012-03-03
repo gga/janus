@@ -17,6 +17,10 @@
 (midje/fact "method creates a property containing the method"
             (method :meth) => [:property {:name "method" :value :meth}])
 
+(midje/fact "body creates a body object with a type and data"
+  (body :json {:sample "obj"}) => [:body {:type :json :data {:sample "obj"}}]
+  (body "data") => [:body {:type :string :data "data"}])
+
 (midje/fact "before creates a property containing the setup function"
             (before 'setup-func) => [:property {:name "before" :value 'setup-func}])
 
@@ -34,13 +38,14 @@
             (contract "sample") => (contract-with :name "sample")
             (contract "sample" (method :post)) => (contract-with :properties [{:name "method" :value :post}])
             (contract "sample" (should-have :path "$" :of-type :string)) => (contract-with :clauses [[:path "$" :of-type :string]])
-            (contract "sample" (header "CT" "json")) => (contract-with :headers [{:name "CT" :value "json"}]))
+            (contract "sample" (header "CT" "json")) => (contract-with :headers [{:name "CT" :value "json"}])
+            (contract "sample" (body "data")) => (contract-with :body {:type :string :data "data"}))
 
 (midje/fact "defining a service"
             (:name (service "sample")) => "sample"
             (:properties (service "sample" (method :post))) => (midje/contains {:name "method" :value :post})
             (:headers (service "sample" (header "ct" "json"))) => (midje/contains {:name "ct" :value "json"})
-            (:contracts (service "sample" (contract "contract 1"))) => (midje/contains {:name "contract 1" :properties [] :headers [] :clauses []}))
+            (:contracts (service "sample" (contract "contract 1"))) => (midje/contains {:name "contract 1" :properties [] :headers [] :clauses [] :body nil}))
 
 (midje/fact "loading a DSL program"
             (construct-domain '(service "sample")) => {:name "sample", :properties (), :headers (), :contracts ()})

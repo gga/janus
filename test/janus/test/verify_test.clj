@@ -37,6 +37,12 @@
     ..response.. =contains=> {:headers {"content-type" "application/json"}}
     (janus.json-response/verify-document anything anything) => [])
 
+  (errors-in-body ..response.. ..contract.. {}) => empty?
+  (provided
+    ..response.. =contains=> {:headers {"content-type" "application/json"}}
+    ..contract.. =contains=> {:clauses ["contract"]}
+    (janus.json-response/verify-document anything ["contract"]) => [])
+
   (errors-in-body ..response.. ..contract.. ..context..) => empty?
   (provided
     ..response.. =contains=> {:headers {"content-type" "application/vnd.example.account+json"}}
@@ -61,11 +67,20 @@
     (provided
       ..context.. =contains=> {:properties [{:name "prop" :value "context val"}]})))
 
+(fact
+  (body-from ..contract.. {}) => "data"
+  (provided
+    ..contract.. =contains=> {:body {:type :string :data "data"}})
+  (body-from ..contract.. {}) => "[\"a\",\"b\",{\"c\":\"hello\"}]"
+  (provided
+    ..contract.. =contains=> {:body {:type :json :data ["a", "b", {"c" "hello"}]}}))
+
 (against-background
-  [(http/request {:method :get, :url "url"}) => "http response"
+  [(http/request {:method :get, :url "url" :body "body"}) => "http response"
    ..contract.. =contains=> {:name "sample contract"}
    (property "method" ..contract.. ..context..) => :get
    (property "url" ..contract.. ..context..) => "url"
+   (body-from ..contract.. ..context..) => "body"
    (errors-in-envelope "http response" ..contract.. ..context..) => []
    (errors-in-body "http response" ..contract.. ..context..) => []]
   
@@ -85,12 +100,12 @@
       (errors-in-body "http response" ..contract.. ..context..) => ["Expected body to match."])))
 
 (facts
-  (verify-service ..service.. ..context..) => [["sample" :succeeded]]
+  (verify-service {:name "svc" :contracts ["contract"]} ..context..) => ["svc" :succeeded]
   (provided
-    ..service.. =contains=> {:contracts [{:name "sample"}]}
-    (verify-contract {:name "sample"} ..context..) => ["sample" :succeeded])
+    (verify-contract "contract" ..context..) => ["sample" :succeeded])
 
-  (verify-service ..service.. ..context..) => [["sample" :failed ["message"]]]
+  (verify-service ..service.. ..context..) => ["svc" :failed [["sample" :failed ["message"]]]]
   (provided
+    ..service.. =contains=> {:name "svc"}
     ..service.. =contains=> {:contracts [{:name "sample"}]}
     (verify-contract {:name "sample"} ..context..) => ["sample" :failed ["message"]]))

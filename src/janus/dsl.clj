@@ -14,6 +14,12 @@
 (defn method [kw-method]
   [:property {:name "method" :value kw-method}])
 
+(defn body [& args]
+  [:body
+   (if (keyword? (nth args 0))
+     {:type (nth args 0) :data (nth args 1)}
+     {:type :string :data (nth args 0)})])
+
 (defn before [setup-func]
   [:property {:name "before" :value setup-func}])
 
@@ -27,7 +33,8 @@
   [:contract {:name name
               :properties (map #(nth % 1) (filter #(= :property (first %)) definition))
               :clauses (map #(nth % 1) (filter #(= :clause (first %)) definition))
-              :headers (map #(nth % 1) (filter #(= :header (first %)) definition))}])
+              :headers (map #(nth % 1) (filter #(= :header (first %)) definition))
+              :body (first (map #(nth % 1) (filter #(= :body (first %)) definition)))}])
 
 (defn service [name & definition]
   {:name name

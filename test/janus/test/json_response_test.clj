@@ -5,7 +5,7 @@
 (unfinished )
 
 (fact
-  (extract-rule {:path "" :equal-to "b"}) => :equal-to)
+  (extract-rule [:path "" :equal-to "b"]) => :equal-to)
 
 (fact
   (equal-to :hello :hello) => nil
@@ -24,7 +24,22 @@
 
 (fact
   (matching #"[a-z]+" "hello") => nil
-  (matching #"[a-z]+" "100") => "Expected \"100\" to match regex [a-z]+")
+  (matching #"[a-z]+" "HELLO") => "Expected \"HELLO\" to match regex [a-z]+"
+  (matching #"[a-z]" 10) => "Expected \"10\" to match regex [a-z]")
 
 (fact
-  (verify-document "\"body\"" [{:path "$", :equal-to "body"}]) => empty?)
+  (verify-clause "a" [:path "$.foo[*]" :matching #"[a-z]"]) => nil
+  (verify-clause "1" [:path "$.foo[*]" :matching #"[a-z]"]) => "failed, at path $.foo[*]"
+  (provided
+    (matching #"[a-z]" "1") => "failed"))
+
+(fact
+  (verify-seq ["a"] [:path "$.foo[*]" :matching #"[a-z]"]) => []
+  (verify-seq ["1"] [:path "$.foo[*]" :matching #"[a-z]"]) => ["failed, at path $.foo[*]"]
+  (provided
+    (matching #"[a-z]" "1") => "failed"))
+
+(fact
+  (verify-document "\"body\"" [[:path "$", :equal-to "body"]]) => empty?
+  (verify-document "{\"foo\": [\"a\"]}" [[:path "$.foo[*]", :matching #"[a-z]"]]) => empty?
+  (verify-document "{\"foo\": [\"1\"]}" [[:path "$.foo[*]", :matching #"[a-z]"]]) =not=> empty?)
