@@ -7,3 +7,4 @@ pom.xml
 /tmp/aruba/bad-contract.jns
 /tmp/aruba/good-contract.jns
 /sinatra.log
+*.tar.gz
