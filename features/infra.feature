@@ -11,3 +11,12 @@ Feature: Infrastructure and support
     """
     When  I run janus
     Then  the output from janus should contain "hello from env"
+
+  Scenario: janus should allow code to be executed after all work has been done
+    Given a directory named "contracts/support"
+    And   a file named "contracts/support/env.clj" with:
+    """
+    (at-exit #(println "exiting"))
+    """
+    When  I run janus
+    Then  the output from janus should contain "exiting"

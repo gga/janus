@@ -1,4 +1,5 @@
 require 'aruba/cucumber'
+require 'harper/client'
 
 class JanusWorld
 
