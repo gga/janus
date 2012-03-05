@@ -3,7 +3,8 @@
   [:require [clojure.tools.cli]
    [janus.dsl]
    [janus.verify]
-   [janus.text-presentation]])
+   [janus.text-presentation]
+   [janus.support]])
 
 (defn verify [service]
   (try
@@ -20,11 +21,13 @@
         [1 (str "Invalid service in '" service "'. Error: " e)]))))
 
 (defn -main [& args]
-  (let [config (clojure.tools.cli/cli args
-                                      ["-v" "--verify" "Services to verify"])
-        service (:verify (nth config 0))
-        [status message] (cond
-                          service (verify service)
-                          :else [0 ""])]
-    (do (println message)
-        (System/exit status))))
+  (do
+    (janus.support/environment)
+    (let [config (clojure.tools.cli/cli args
+                                          ["-v" "--verify" "Services to verify"])
+            service (:verify (nth config 0))
+            [status message] (cond
+                              service (verify service)
+                              :else [0 ""])]
+        (do (println message)
+            (System/exit status)))))
