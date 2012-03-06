@@ -30,6 +30,7 @@ task :package => [:build, :verify] do
   rel_name = "janus-#{VERSION}"
   mkdir_p rel_name
   cp JAR, "#{rel_name}/janus.jar"
+  rm "#{rel_name}.tar.gz"
   sh "tar -cvf #{rel_name}.tar #{rel_name}"
   sh "gzip #{rel_name}.tar"
 end
