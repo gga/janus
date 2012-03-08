@@ -44,6 +44,11 @@
   (:value (first (filter #(= prop-name (:name %))
                          (concat (:properties contract) (:properties context))))))
 
+(defn headers-from [contract context]
+  (reduce (fn [acc v] (conj acc {(:name v) (:value v)}))
+          {}
+          (concat (:headers contract) (:headers context))))
+
 (defn body-from [contract context]
   (let [body-def (if (contains? contract :body)
                    (:body contract)
@@ -55,6 +60,7 @@
 (defn verify-contract [contract context]
   (let [response (http/request {:method (property "method" contract context),
                                 :url (property "url" contract context)
+                                :headers (headers-from contract context)
                                 :body (body-from contract context)})
         envelope-errors (errors-in-envelope response contract context)
         body-errors (errors-in-body response contract context)

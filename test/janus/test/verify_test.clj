@@ -68,6 +68,14 @@
       ..context.. =contains=> {:properties [{:name "prop" :value "context val"}]})))
 
 (fact
+  (headers-from ..contract.. {}) => {"h" "v"}
+  (provided
+    ..contract.. =contains=> {:headers [{:name "h" :value "v"}]})
+  (headers-from ..contract.. {}) => {"h" "v", "h2" "v2"}
+  (provided
+    ..contract.. =contains=> {:headers [{:name "h" :value "v"}
+                                        {:name "h2" :value "v2"}]}))
+(fact
   (body-from ..contract.. {}) => "data"
   (provided
     ..contract.. =contains=> {:body {:type :string :data "data"}})
@@ -76,10 +84,11 @@
     ..contract.. =contains=> {:body {:type :json :data ["a", "b", {"c" "hello"}]}}))
 
 (against-background
-  [(http/request {:method :get, :url "url" :body "body"}) => "http response"
+  [(http/request {:method :get, :url "url" :headers "headers" :body "body"}) => "http response"
    ..contract.. =contains=> {:name "sample contract"}
    (property "method" ..contract.. ..context..) => :get
    (property "url" ..contract.. ..context..) => "url"
+   (headers-from ..contract.. ..context..) => "headers"
    (body-from ..contract.. ..context..) => "body"
    (errors-in-envelope "http response" ..contract.. ..context..) => []
    (errors-in-body "http response" ..contract.. ..context..) => []]
