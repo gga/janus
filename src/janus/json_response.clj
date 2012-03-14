@@ -34,7 +34,9 @@
       (str failure ", at path " (nth clause 1)))))
 
 (defn verify-seq [actual-seq clause]
-  (filter #(not= nil %) (map #(verify-clause % clause) actual-seq)))
+  (if (empty? actual-seq)
+    (str "Nothing found at path " (nth clause 1))
+    (filter #(not= nil %) (map #(verify-clause % clause) actual-seq))))
 
 (defn verify-document [doc clauses]
   (let [json-doc (read-json doc)]

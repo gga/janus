@@ -37,7 +37,8 @@
   (verify-seq ["a"] [:path "$.foo[*]" :matching #"[a-z]"]) => []
   (verify-seq ["1"] [:path "$.foo[*]" :matching #"[a-z]"]) => ["failed, at path $.foo[*]"]
   (provided
-    (matching #"[a-z]" "1") => "failed"))
+    (matching #"[a-z]" "1") => "failed")
+  (verify-seq [] [:path "$.foo" :of-type :string]) => "Nothing found at path $.foo")
 
 (fact
   (verify-document "\"body\"" [[:path "$", :equal-to "body"]]) => empty?
