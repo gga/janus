@@ -1,7 +1,7 @@
 require 'cucumber'
 require 'cucumber/rake/task'
 
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 JAR = "janus-#{VERSION}-standalone.jar"
 
 CLJ_SRC = FileList['**/*.clj']
