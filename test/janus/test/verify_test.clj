@@ -75,13 +75,22 @@
   (provided
     ..contract.. =contains=> {:headers [{:name "h" :value "v"}
                                         {:name "h2" :value "v2"}]}))
+
+(fact
+  (to-xml [:tag]) => (contains "<tag></tag>")
+  (to-xml [:tag {:attr "value"}]) => (contains "<tag attr=\"value\">")
+  (to-xml [:tag [:sub]]) => (contains "<tag><sub></sub>"))
+
 (fact
   (body-from ..contract.. {}) => "data"
   (provided
     ..contract.. =contains=> {:body {:type :string :data "data"}})
   (body-from ..contract.. {}) => "[\"a\",\"b\",{\"c\":\"hello\"}]"
   (provided
-    ..contract.. =contains=> {:body {:type :json :data ["a", "b", {"c" "hello"}]}}))
+    ..contract.. =contains=> {:body {:type :json :data ["a", "b", {"c" "hello"}]}})
+  (body-from ..contract.. {}) => (contains "<tag attr=\"value\"></tag>")
+  (provided
+    ..contract.. =contains=> {:body {:type :xml :data [:tag {:attr "value"}]}}))
 
 (against-background
   [(http/request {:method :get, :url "url" :headers "headers" :body "body"}) => "http response"

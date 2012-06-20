@@ -21,6 +21,9 @@
   (body :json {:sample "obj"}) => [:body {:type :json :data {:sample "obj"}}]
   (body "data") => [:body {:type :string :data "data"}])
 
+(midje/fact "body allows definition of xml"
+            (nth (body :xml [:tag {:attr "value"}]) 1) => (midje/just {:type :xml :data midje/anything}))
+
 (midje/fact "before creates a property containing the setup function"
             (before 'setup-func) => [:property {:name "before" :value 'setup-func}])
 

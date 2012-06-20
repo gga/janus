@@ -2,6 +2,7 @@
   [:require [janus.json-response]
    [json-path]
    [clojure.data.json :as json]
+   [clojure.data.xml :as xml]
    [clj-http.client :as http]]
   [:use midje.sweet])
 
@@ -49,13 +50,26 @@
           {}
           (concat (:headers contract) (:headers context))))
 
+(defn vec-to-el [[tag & attrs-and-els]]
+  (let [attrs (if (map? (first attrs-and-els))
+                (first attrs-and-els)
+                {})
+        els (if (map? (first attrs-and-els))
+              (rest attrs-and-els)
+              attrs-and-els)]
+    (apply xml/element (concat [tag attrs] (map vec-to-el els)))))
+
+(defn to-xml [tree]
+  (xml/emit-str (vec-to-el tree)))
+
 (defn body-from [contract context]
   (let [body-def (if (contains? contract :body)
                    (:body contract)
                    (:body context))]
     (cond
      (= (:type body-def) :string) (str (:data body-def))
-     (= (:type body-def) :json) (json/json-str (:data body-def)))))
+     (= (:type body-def) :json) (json/json-str (:data body-def))
+     (= (:type body-def) :xml) (to-xml (:data body-def)))))
 
 (defn verify-contract [contract context]
   (let [response (http/request {:method (property "method" contract context),
