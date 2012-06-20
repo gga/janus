@@ -1,4 +1,4 @@
-(defproject janus "0.0.1"
+(defproject janus "0.0.2"
   :description "Consumer-driven contracts, verified both ways."
   :url "http://github.com/gga/janus"
   :dependencies [[org.clojure/clojure "1.3.0"]
