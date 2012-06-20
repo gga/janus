@@ -5,12 +5,12 @@ Given /^a contract "([^"]*)":$/ do |name, content|
 end
 
 When /^I run janus$/ do
-  last_janus_run = "java -jar ../../janus-0.0.1-standalone.jar"
+  last_janus_run = "java -jar ../../janus-0.0.2-standalone.jar"
   step %{I run `#{last_janus_run}`}
 end
 
 When /^I run janus with args "([^"]*)"$/ do |args|
-  last_janus_run = "java -jar ../../janus-0.0.1-standalone.jar #{args}"
+  last_janus_run = "java -jar ../../janus-0.0.2-standalone.jar #{args}"
   step %{I run `#{last_janus_run}`}
 end
 
