@@ -79,7 +79,9 @@
 (fact
   (to-xml [:tag]) => (contains "<tag></tag>")
   (to-xml [:tag {:attr "value"}]) => (contains "<tag attr=\"value\">")
-  (to-xml [:tag [:sub]]) => (contains "<tag><sub></sub>"))
+  (to-xml [:tag [:sub]]) => (contains "<tag><sub></sub>")
+  (to-xml [:tag "blah"]) => (contains "<tag>blah</tag>")
+  (to-xml [:tag "blah" [:sub {:attr "val"}]]) => (contains "<tag>blah<sub attr=\"val\"></sub></tag"))
 
 (fact
   (body-from ..contract.. {}) => "data"

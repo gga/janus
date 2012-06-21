@@ -57,7 +57,11 @@
         els (if (map? (first attrs-and-els))
               (rest attrs-and-els)
               attrs-and-els)]
-    (apply xml/element (concat [tag attrs] (map vec-to-el els)))))
+    (apply xml/element (concat [tag attrs]
+                               (map (fn [el] (if (string? el)
+                                               el
+                                               (vec-to-el el)))
+                                    els)))))
 
 (defn to-xml [tree]
   (xml/emit-str (vec-to-el tree)))
