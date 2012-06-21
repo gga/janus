@@ -14,6 +14,9 @@
 (defn method [kw-method]
   [:property {:name "method" :value kw-method}])
 
+(defn serialization [s11n]
+  [:property {:name "serialization" :value s11n}])
+
 (defn body [& args]
   [:body
    (if (keyword? (nth args 0))

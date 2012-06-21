@@ -25,6 +25,10 @@
      (= :equal-to comparison) (if (not= expected actual)
                                (str "Expected header '" header-name "' to equal '" expected "'. Got '" actual "'.")))))
 
+(defn property [prop-name contract context]
+  (:value (first (filter #(= prop-name (:name %))
+                         (concat (:properties contract) (:properties context))))))
+
 (defn errors-in-envelope [response contract context]
   (concat
    (map (partial check-clause response)
@@ -38,12 +42,9 @@
         clauses (concat (:clauses contract) (:clauses context))]
     (cond
      (or (re-seq #"^application/json" doc-type)
-         (re-seq #"\+json" doc-type)) (janus.json-response/verify-document body clauses)
+         (re-seq #"\+json" doc-type)
+         (= (property "serialization" contract context) :json)) (janus.json-response/verify-document body clauses)
      :else [(str "Unable to verify documents of type '" doc-type "'")])))
-
-(defn property [prop-name contract context]
-  (:value (first (filter #(= prop-name (:name %))
-                         (concat (:properties contract) (:properties context))))))
 
 (defn headers-from [contract context]
   (reduce (fn [acc v] (conj acc {(:name v) (:value v)}))
