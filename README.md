@@ -40,9 +40,7 @@ against a contract, create a contract like so:
 
         (should-have :path "json path" :matching <regex>)
         (should-have :path "json path" :of-type <:string, :array, :object or :number>)
-        (should-have :path "json path" :equal-to <value>)
-      )
-    )
+        (should-have :path "json path" :equal-to <value>)))
 
 Save that in a file with the suffix `.jns` and then run it with janus.
 
