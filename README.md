@@ -28,19 +28,21 @@ Janus currently only verifies services against contracts, it can't yet
 use those contracts to create mock services. To verify a service
 against a contract, create a contract like so:
 
-    (service
-      "Service name"
-      
-      (contract "contract name"
-        (method <one of :get, :post, :put or :delete>)
-        (url "full, absolute URL to the service")
-        (header "header name" "header value")
-        (body <:xml, :json or :string>
-              <Clojure data structure that will be serialized as above>)
+```clojure
+(service
+ "Service name"
+                                                                                                                                                                                                                    
+ (contract "contract name"
+           (method <one of :get, :post, :put or :delete>)
+           (url "full, absolute URL to the service")
+           (header "header name" "header value")
+           (body <:xml, :json or :string>
+                 <Clojure data structure that will be serialized as above>)
 
-        (should-have :path "json path" :matching <regex>)
-        (should-have :path "json path" :of-type <:string, :array, :object or :number>)
-        (should-have :path "json path" :equal-to <value>)))
+           (should-have :path "json path" :matching <regex>)
+           (should-have :path "json path" :of-type <:string, :array, :object or :number>)
+           (should-have :path "json path" :equal-to <value>)))
+```
 
 Save that in a file with the suffix `.jns` and then run it with janus.
 
