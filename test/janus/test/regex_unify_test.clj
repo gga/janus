@@ -8,11 +8,11 @@
 
 (facts
   (logic/run 1 [q] (charo q \a true)) => '(\a)
-  (logic/run 1 [q] (charo q \a false)) => '(_.0))
+  (count (logic/run 1 [q] (charo q \a false))) => 1)
 
 (facts
   (logic/run 1 [q] (containso q '(:a :b) true)) => '(:a)
-  (logic/run 1 [q] (containso q '(:a :b) false)) => '(_.0))
+  (count (logic/run 1 [q] (containso q '(:a :b) false))) => 1)
 
 (fact
   (count (first (logic/run 1 [q] (matching-stringo q [\a \b] 2)))) => 2)

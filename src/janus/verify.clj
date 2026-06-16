@@ -3,8 +3,7 @@
    [json-path]
    [clojure.data.json :as json]
    [clojure.data.xml :as xml]
-   [clj-http.client :as http]]
-  [:use midje.sweet])
+   [clj-http.client :as http]])
 
 (defn extract-clause [clause contract context]
   (filter #(= clause (nth % 0))
@@ -73,7 +72,7 @@
                    (:body context))]
     (cond
      (= (:type body-def) :string) (str (:data body-def))
-     (= (:type body-def) :json) (json/json-str (:data body-def))
+     (= (:type body-def) :json) (json/write-str (:data body-def))
      (= (:type body-def) :xml) (to-xml (:data body-def)))))
 
 (defn verify-contract [contract context]

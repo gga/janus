@@ -21,13 +21,13 @@
         [1 (str "Invalid service in '" service "'. Error: " e)]))))
 
 (defn -main [& args]
-  (do
-    (janus.support/environment)
-    (let [config (clojure.tools.cli/cli args
-                                          ["-v" "--verify" "Services to verify"])
-            service (:verify (nth config 0))
-            [status message] (cond
-                              service (verify service)
-                              :else [0 ""])]
-        (do (println message)
-            (System/exit status)))))
+  (janus.support/environment)
+  (let [{:keys [options]} (clojure.tools.cli/parse-opts
+                            args
+                            [["-v" "--verify SERVICE" "Service contract file to verify"]])
+        service (:verify options)
+        [status message] (if service
+                           (verify service)
+                           [0 ""])]
+    (println message)
+    (System/exit status)))

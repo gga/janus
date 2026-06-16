@@ -1,6 +1,6 @@
 (ns janus.json-response
-  [:require [json-path]]
-  [:use [clojure.data.json :only [read-json]]])
+  [:require [json-path]
+   [clojure.data.json :as json]])
 
 (defn extract-rule [clause]
   (nth clause 2))
@@ -39,7 +39,7 @@
     (filter #(not= nil %) (map #(verify-clause % clause) actual-seq))))
 
 (defn verify-document [doc clauses]
-  (let [json-doc (read-json doc)]
+    (let [json-doc (json/read-str doc :key-fn keyword)]
     (flatten (filter #(not= nil %)
                      (map (fn [clause]
                             (let [doc-part (json-path/at-path (nth clause 1) json-doc)]
